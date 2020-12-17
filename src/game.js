@@ -24,6 +24,7 @@ var game = new Phaser.Game(config);
 var posX = 100;
 var posY = 100;
 var characterView = "front";
+const characterVelocity = 100;
 
 function preload() {
     this.load.image("character-front", "./public/assets/character/front/1.png");
@@ -34,37 +35,57 @@ function preload() {
 
 function create() {
     this.character = this.physics.add.image(posX, posY, "character-front");
-    // Mouse Events
-    this.input.keyboard.on("keydown_RIGHT", () => {
-        console.log(this.character);
-        this.character.setAcceleration(100,0);
-        if(characterView !== "right"){
-            this.character.setTexture("character-right");
-            characterView = "right";
-        }
-    });
-
-    this.input.keyboard.on("keyup_RIGHT", () => {
-        this.character.setAcceleration(0,0);
-        this.character.setVelocity(0);
-    });
+    mouseEvents(this);
 }
 
 function update(time, delta) {
 }
 
-function mouseEvents() {
-    console.log(game);
+function mouseEvents(game) {
     game.input.keyboard.on("keydown_RIGHT", () => {
-        game.character.setAcceleration(100,0);
-        if(characterView !== "right"){
-            game.character = game.physics.add.image(app.posX, app.posY, "character-right");
-            characterView = "right";
-        }
+        game.character.setVelocityX(characterVelocity);
+        updateCharacterView(game, "right");
     });
 
     game.input.keyboard.on("keyup_RIGHT", () => {
-        game.character.setAcceleration(0,0);
-        game.character.setVelocity(0);
+        stopCharacter(game.character);
     });
+
+    game.input.keyboard.on("keydown_LEFT", () => {
+        game.character.setVelocityX(characterVelocity*(-1));
+        updateCharacterView(game, "left");
+    });
+
+    game.input.keyboard.on("keyup_LEFT", () => {
+        stopCharacter(game.character);
+    });
+
+    game.input.keyboard.on("keydown_UP", () => {
+        game.character.setVelocityY(characterVelocity*(-1));
+        updateCharacterView(game, "back");
+    });
+
+    game.input.keyboard.on("keyup_UP", () => {
+        stopCharacter(game.character);
+    });
+
+    game.input.keyboard.on("keydown_DOWN", () => {
+        game.character.setVelocityY(characterVelocity);
+        updateCharacterView(game, "front");
+    });
+
+    game.input.keyboard.on("keyup_DOWN", () => {
+        stopCharacter(game.character);
+    });
+}
+
+function updateCharacterView(game, orientation){
+    if(characterView !== orientation){
+        game.character.setTexture("character-"+orientation);
+        characterView = orientation;
+    }
+}
+
+function stopCharacter(character){
+    character.setVelocity(0);
 }
