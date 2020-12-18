@@ -22,70 +22,76 @@ var config = {
 var game = new Phaser.Game(config);
 
 var posX = 100;
-var posY = 100;
+var posY = 200;
 var characterView = "front";
-const characterVelocity = 100;
+const characterWidth = 42;
+const characterHeight = 70;
+const characterVelocity = 2;
 
 function preload() {
     this.load.image("character-front", "./public/assets/character/front/1.png");
     this.load.image("character-back", "./public/assets/character/back/1.png");
     this.load.image("character-left", "./public/assets/character/left/1.png");
     this.load.image("character-right", "./public/assets/character/right/1.png");
+    this.load.image("map", "./public/assets/background.jpg");
 }
 
 function create() {
+    this.add.image(0, 0, 'map').setOrigin(0);
     this.character = this.physics.add.image(posX, posY, "character-front");
-    mouseEvents(this);
+    this.cursor = this.input.keyboard.createCursorKeys();
 }
 
 function update(time, delta) {
+    keyEvents(this);
+    //var color = this.textures.getPixel(this.character.x, this.character.y, 'map');
+    //console.log(color);
 }
 
-function mouseEvents(game) {
-    game.input.keyboard.on("keydown_RIGHT", () => {
-        game.character.setVelocityX(characterVelocity);
+function keyEvents(game) {
+    if (game.cursor.right.isDown) {
+        if (verifyMove('x', game, 1)) game.character.x += characterVelocity;
         updateCharacterView(game, "right");
-    });
-
-    game.input.keyboard.on("keyup_RIGHT", () => {
-        stopCharacter(game.character);
-    });
-
-    game.input.keyboard.on("keydown_LEFT", () => {
-        game.character.setVelocityX(characterVelocity*(-1));
+    }
+    if (game.cursor.left.isDown) {
+        if (verifyMove('x', game, -1)) game.character.x -= characterVelocity;
         updateCharacterView(game, "left");
-    });
-
-    game.input.keyboard.on("keyup_LEFT", () => {
-        stopCharacter(game.character);
-    });
-
-    game.input.keyboard.on("keydown_UP", () => {
-        game.character.setVelocityY(characterVelocity*(-1));
+    }
+    if (game.cursor.up.isDown) {
+        if (verifyMove('y', game, -1)) game.character.y -= characterVelocity;
         updateCharacterView(game, "back");
-    });
-
-    game.input.keyboard.on("keyup_UP", () => {
-        stopCharacter(game.character);
-    });
-
-    game.input.keyboard.on("keydown_DOWN", () => {
-        game.character.setVelocityY(characterVelocity);
+    }
+    if (game.cursor.down.isDown) {
+        if (verifyMove('y', game, 1)) game.character.y += characterVelocity;
         updateCharacterView(game, "front");
-    });
-
-    game.input.keyboard.on("keyup_DOWN", () => {
-        stopCharacter(game.character);
-    });
+    }
 }
 
-function updateCharacterView(game, orientation){
-    if(characterView !== orientation){
-        game.character.setTexture("character-"+orientation);
+function updateCharacterView(game, orientation) {
+    if (characterView !== orientation) {
+        game.character.setTexture("character-" + orientation);
         characterView = orientation;
     }
 }
 
-function stopCharacter(character){
-    character.setVelocity(0);
+function verifyMove(axis, game, dir) {
+    var move = true;
+    if (axis === 'x') {
+        for (var i = game.character.y - (characterHeight / 2); i < game.character.y + (characterHeight / 2); i++) {
+            const color = game.textures.getPixel(game.character.x + (((characterWidth / 2) + characterVelocity) * dir), i, 'map');
+            if (color.r === 0 && color.g === 0 && color.b === 0) {
+                move = false;
+                break;
+            }
+        }
+    } else if (axis == 'y') {
+        for (var i = game.character.x - (characterWidth / 2); i < game.character.x + (characterWidth / 2); i++) {
+            const color = game.textures.getPixel(i, game.character.y + (((characterHeight / 2) + characterVelocity) * dir), 'map');
+            if (color.r === 0 && color.g === 0 && color.b === 0) {
+                move = false;
+                break;
+            }
+        }
+    }
+    return move;
 }
