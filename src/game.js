@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
 
 var config = {
-    width: 1000,
-    height: 700,
     type: Phaser.AUTO,
+    scale: {
+        mode: Phaser.Scale.F,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: window.innerWidth,
+        height: window.innerHeight,
+    },
     scene: {
         preload: preload,
         create: create,
@@ -37,32 +41,61 @@ function preload() {
 }
 
 function create() {
+    this.cameras.main.setBounds(0, 0, 3927, 1904);
     this.add.image(0, 0, 'map').setOrigin(0);
+    this.cameras.main.setZoom(1);
+    this.cameras.main.centerOn(posX, posY);
+
     this.character = this.physics.add.image(posX, posY, "character-front");
     this.cursor = this.input.keyboard.createCursorKeys();
+    fullscreenEvent(this);
 }
 
 function update(time, delta) {
     keyEvents(this);
-    //var color = this.textures.getPixel(this.character.x, this.character.y, 'map');
-    //console.log(color);
+}
+
+function fullscreenEvent(game) {
+    var FKey = game.input.keyboard.addKey('F');
+    FKey.on('down', function () {
+
+        if (game.scale.isFullscreen) {
+            game.scale.stopFullscreen();
+        }
+        else {
+            game.scale.startFullscreen();
+        }
+
+    }, game);
 }
 
 function keyEvents(game) {
     if (game.cursor.right.isDown) {
-        if (verifyMove('x', game, 1)) game.character.x += characterVelocity;
+        if (verifyMove('x', game, 1)) {
+            game.character.x += characterVelocity;
+            game.cameras.main.centerOnX(game.character.x);
+        }
         updateCharacterView(game, "right");
     }
     if (game.cursor.left.isDown) {
-        if (verifyMove('x', game, -1)) game.character.x -= characterVelocity;
+        if (verifyMove('x', game, -1)) {
+            game.character.x -= characterVelocity;
+            game.cameras.main.centerOnX(game.character.x);
+        }
         updateCharacterView(game, "left");
     }
     if (game.cursor.up.isDown) {
-        if (verifyMove('y', game, -1)) game.character.y -= characterVelocity;
+        if (verifyMove('y', game, -1)) {
+            game.character.y -= characterVelocity;
+            game.cameras.main.centerOnY(game.character.y);
+        }
         updateCharacterView(game, "back");
     }
     if (game.cursor.down.isDown) {
-        if (verifyMove('y', game, 1)) game.character.y += characterVelocity;
+        if (verifyMove('y', game, 1)) {
+            game.character.y += characterVelocity;
+            game.cameras.main.centerOnY(game.character.y);
+        }
         updateCharacterView(game, "front");
     }
 }
