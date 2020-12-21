@@ -22,7 +22,6 @@ class Game extends Phaser.Scene {
         this.load.image("character-left", "./public/assets/character/left/1.png");
         this.load.image("character-right", "./public/assets/character/right/1.png");
         this.load.image("map", "./public/assets/background.jpg");
-        console.log(this);
     }
 
     create() {
