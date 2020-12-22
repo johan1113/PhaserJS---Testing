@@ -4,6 +4,7 @@ import VirtualJoyStickPlugin from 'phaser3-rex-plugins/plugins/virtualjoystick-p
 var posX = 100;
 var posY = 200;
 var characterView = "front";
+var keyDown = '';
 const characterWidth = 42;
 const characterHeight = 70;
 const characterVelocity = 2;
@@ -31,13 +32,13 @@ class Game extends Phaser.Scene {
         this.cameras.main.centerOn(posX, posY);
 
         this.character = this.physics.add.image(posX, posY, "character-front");
-        this.character.setCollideWorldBounds(true);
+        //this.character.setCollideWorldBounds(true);
         this.cursor = this.input.keyboard.createCursorKeys();
         this.fullscreenEvent(this);
 
-        
+
         this.joyStick = this.plugins.get('rexVirtualJoyStick').add(this, {
-            x: this.cameras.main.displayWidth/2,
+            x: this.cameras.main.displayWidth / 2,
             y: this.cameras.main.displayHeight - 120,
             radius: 60,
             base: this.add.circle(0, 0, 80, 0x888888),
@@ -59,9 +60,10 @@ class Game extends Phaser.Scene {
     dumpJoyStickState() {
         var cursorKeys = this.joyStick.createCursorKeys();
         var s = 'Key down: ';
+        keyDown = '';
         for (var name in cursorKeys) {
             if (cursorKeys[name].isDown) {
-                this.joyStickEvents(this.joyStick, name, this);
+                keyDown += name + ' ';
                 s += name + ' ';
             }
         }
@@ -72,50 +74,61 @@ class Game extends Phaser.Scene {
     }
 
     joyStickEvents(joyStick, key, game) {
-        game.character.setVelocityX(Math.floor(joyStick.forceX * 100) / 100);
-        game.character.setVelocityY(Math.floor(joyStick.forceY * 100) / 100);
         /*
-        if (key === 'right') {
-            if (this.verifyMove('x', game, 1)) {
-                game.character.setVelocityX(Math.floor(joyStick.forceX * 100) / 100);
-                game.cameras.main.centerOnX(game.character.x);
+        var forceX = (Math.floor(joyStick.forceX * 100) / 100) * 2;
+        var forceY = (Math.floor(joyStick.forceY * 100) / 100) * 2;
+
+        game.character.setVelocity(forceX, forceY);
+        */
+
+        console.log(keyDown);
+
+        if (keyDown !== '') {
+            const array = keyDown.split(' ');
+
+            if (array[0] === 'right' || array[1] === 'right') {
+                if (this.verifyMove('x', game, 1)) {
+                    game.character.x += characterVelocity;
+                    game.cameras.main.centerOnX(game.character.x);
+                }
+                this.updateCharacterView(game, "right");
             }
-            this.updateCharacterView(game, "right");
+
+            if (array[0] === 'left' || array[1] === 'left') {
+                if (this.verifyMove('x', game, -1)) {
+                    game.character.x -= characterVelocity;
+                    game.cameras.main.centerOnX(game.character.x);
+                }
+                this.updateCharacterView(game, "left");
+            }
+
+            if (array[0] === 'down') {
+                if (this.verifyMove('y', game, 1)) {
+                    game.character.y += characterVelocity;
+                    game.cameras.main.centerOnY(game.character.y);
+                }
+                this.updateCharacterView(game, "front");
+            }
+
+            if (array[0] === 'up') {
+                if (this.verifyMove('y', game, -1)) {
+                    game.character.y -= characterVelocity;
+                    game.cameras.main.centerOnY(game.character.y);
+                }
+                this.updateCharacterView(game, "back");
+            }
         }
-        if (key === 'left') {
-            if (this.verifyMove('x', game, -1)) {
-                game.character.setVelocityX(Math.floor(joyStick.forceX * 100) / 100);
-                game.cameras.main.centerOnX(game.character.x);
-            }
-            this.updateCharacterView(game, "left");
-        }
-        if (key === 'up') {
-            if (this.verifyMove('y', game, -1)) {
-                game.character.setVelocityY(Math.floor(joyStick.forceY * 100) / 100);
-                game.cameras.main.centerOnY(game.character.y);
-            }
-            this.updateCharacterView(game, "back");
-        }
-        if (key === 'down') {
-            if (this.verifyMove('y', game, 1)) {
-                game.character.setVelocityY(Math.floor(joyStick.forceY * 100) / 100);
-                game.cameras.main.centerOnY(game.character.y);
-            }
-            this.updateCharacterView(game, "front");
-        }*/
     }
 
     fullscreenEvent(game) {
         var FKey = game.input.keyboard.addKey('F');
         FKey.on('down', function () {
-    
             if (game.scale.isFullscreen) {
                 game.scale.stopFullscreen();
             }
             else {
                 game.scale.startFullscreen();
             }
-    
         }, game);
     }
 
@@ -170,6 +183,20 @@ class Game extends Phaser.Scene {
         } else if (axis == 'y') {
             for (var i = game.character.x - (characterWidth / 2); i < game.character.x + (characterWidth / 2); i++) {
                 const color = game.textures.getPixel(i, game.character.y + (((characterHeight / 2) + characterVelocity) * dir), 'map');
+                if (color.r === 0 && color.g === 0 && color.b === 0) {
+                    move = false;
+                    break;
+                }
+            }
+        }
+        return move;
+    }
+
+    verifyNewPos(posX, posY, game) {
+        var move = true;
+        for (var y = posY - (characterHeight / 2); y < posY + (characterHeight / 2); y++) {
+            for (var x = posX - (characterWidth / 2); x < posX + (characterWidth / 2); x++) {
+                const color = game.textures.getPixel(x, y, 'map');
                 if (color.r === 0 && color.g === 0 && color.b === 0) {
                     move = false;
                     break;
